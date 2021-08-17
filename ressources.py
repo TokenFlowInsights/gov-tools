@@ -6,7 +6,7 @@ token_abi = """
     ]
 """
 
-IOU_1_0_address = '0x9aed7a25f2d928225e6fb2388055c7363ad6727b'
+IOU_1_0_address = "0x9aed7a25f2d928225e6fb2388055c7363ad6727b"
 
 vote_proxy_factory_V1_abi = """
     [

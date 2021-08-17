@@ -47,17 +47,20 @@ def has_proxy(chain, address, vote_proxy_factory, abi, block=None):
 
 
 def connect_chain(http_hook=None):
-    method = 'HTTP'
+    method = "HTTP"
     provider = Web3.HTTPProvider
     hook = http_hook
 
     try:
-        w3 = Web3(provider(hook, request_kwargs={'timeout': 60}))
+        w3 = Web3(provider(hook, request_kwargs={"timeout": 60}))
         if w3.isConnected():
-            print("Connected to %s: %s with latest block %d." % (method, hook, w3.eth.blockNumber))
+            print(
+                "Connected to %s: %s with latest block %d."
+                % (method, hook, w3.eth.blockNumber)
+            )
             return w3
         else:
-            print('%s connection to %s failed.' % (method, hook))
+            print("%s connection to %s failed." % (method, hook))
             return None
     except Exception as e:
         print("Error while connecting to chain.")
@@ -70,5 +73,5 @@ def list_voters(file):
         csv_reader = csv.reader(csv_file, delimiter=",")
         for row in csv_reader:
             voters.append(row[0])
-    
+
     return voters
