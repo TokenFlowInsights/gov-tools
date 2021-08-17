@@ -1,12 +1,14 @@
 from web3 import Web3
 import csv
 
+from resources import TOKEN_ABI, VOTE_PROXY_ABI
 
-def balance_of(chain, token, address, abi, block=None):
+
+def balance_of(chain, token, address, block=None):
 
     try:
         token_contract = chain.eth.contract(
-            address=Web3.toChecksumAddress(token), abi=abi
+            address=Web3.toChecksumAddress(token), abi=TOKEN_ABI
         )
         if block:
             balance = token_contract.functions.balanceOf(
@@ -25,11 +27,11 @@ def balance_of(chain, token, address, abi, block=None):
     return balance
 
 
-def has_proxy(chain, address, vote_proxy_factory, abi, block=None):
+def has_proxy(chain, address, factory_address, factory_abi, block=None):
 
     try:
         vote_proxy_factory_contract = chain.eth.contract(
-            address=Web3.toChecksumAddress(vote_proxy_factory), abi=abi
+            address=Web3.toChecksumAddress(factory_address), abi=factory_abi
         )
         if block:
             proxy = vote_proxy_factory_contract.functions.hasProxy(
@@ -44,6 +46,34 @@ def has_proxy(chain, address, vote_proxy_factory, abi, block=None):
         proxy = False
 
     return proxy
+
+
+def get_proxy(chain, voter, factory_address, factory_abi, block=None):
+
+    try:
+        vote_proxy_factory = chain.eth.contract(
+            address=Web3.toChecksumAddress(factory_address),
+            abi=factory_abi,
+        )
+
+        if block:
+            vote_proxy_address = vote_proxy_factory.functions.hotMap(
+                Web3.toChecksumAddress(voter)
+            ).call(block_identifier=block)
+        else:
+            vote_proxy_address = vote_proxy_factory.functions.hotMap(
+                Web3.toChecksumAddress(voter)
+            ).call()
+
+        vote_proxy = chain.eth.contract(
+            address=Web3.toChecksumAddress(vote_proxy_address), abi=VOTE_PROXY_ABI
+        )
+
+    except Exception as e:
+        print(e)
+        vote_proxy = vote_proxy_address = None
+
+    return vote_proxy, vote_proxy_address
 
 
 def connect_chain(http_hook=None):

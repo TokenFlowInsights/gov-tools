@@ -1,9 +1,6 @@
 # gov-tools
 
-
-
 ### Requirements:
-
 
 * Python 3.8+
 * Web3.py

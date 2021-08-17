@@ -1,129 +1,81 @@
-from web3 import Web3
-import csv
 import sys
-from ressources import *
-from utils import balance_of
-from utils import has_proxy
-from utils import connect_chain
-from utils import list_voters
+
+from resources import MKR, IOUs, VOTE_PROXY_FACTORIES
+from utils import *
 
 # read in command line arguments
 list_of_voters = sys.argv[1]
 node = sys.argv[2]
-poll_closing_block = int(sys.argv[3])
+block = int(sys.argv[3]) if sys.argv[3] else None
 
 voters = list_voters(list_of_voters)
 chain = connect_chain(node)
 
-
+# calculate the total voting power
 VOTING_POWER = 0
 
-for voter in voters:
-
-    MKRs_HOT = 0
-    IOU_1_0 = IOU_1_1 = IOU_1_2 = 0
-    STAKED_VIA_PROXY_1_1 = MKRs_1_1_COLD = 0
-    STAKED_VIA_PROXY_1_2 = MKRs_1_2_COLD = 0
+for hot_address in voters:
 
     """
     HOT STORAGE
     """
-    # MKRs on hot wallet
-    MKRs_HOT = balance_of(chain, MKR, voter, token_abi, poll_closing_block)
+    # MKRs in the HOT wallet
+    HOT_balance = balance_of(
+        chain, MKR, hot_address, block
+    )
 
     """
     DIRECT STAKES
     """
-    # MKRs staked directly to DSChief 1.0
-    IOU_1_0 = balance_of(chain, IOU_1_0_address, voter, token_abi, poll_closing_block)
-
-    # MKRs staked directly to DSChief 1.1
-    IOU_1_1 = balance_of(chain, IOU_1_1_address, voter, token_abi, poll_closing_block)
-
-    # MKRs staked directly to DSChief 1.2
-    IOU_1_2 = balance_of(chain, IOU_1_2_address, voter, token_abi, poll_closing_block)
+    # MKRs staked in DSChiefs by the HOT wallet
+    CHIEFS_balance = sum(
+        [balance_of(chain, IOU, hot_address, block) for IOU in IOUs.values()]
+    )
 
     """
-    STAKES VIA VoteProxy; COLD STORAGE
+    STAKES VIA VoteProxy and COLD STORAGE
     """
-    if has_proxy(
-        chain,
-        voter,
-        vote_proxy_factory_V1_address,
-        vote_proxy_factory_V1_abi,
-        poll_closing_block,
-    ):
+    PROXY_CHIEFs_balance = 0
+    COLD_balance = 0
 
-        vote_proxy_factory_V1 = chain.eth.contract(
-            address=Web3.toChecksumAddress(vote_proxy_factory_V1_address),
-            abi=vote_proxy_factory_V1_abi,
-        )
-        vote_proxy = vote_proxy_factory_V1.functions.hotMap(
-            Web3.toChecksumAddress(voter)
-        ).call(block_identifier=poll_closing_block)
-        # MKRs staked to DSChief 1.1 via VoteProxy
-        STAKED_VIA_PROXY_1_1 = balance_of(
-            chain, IOU_1_1_address, vote_proxy, token_abi, poll_closing_block
-        )
+    # iterate over Proxy Factories
+    for factory_address, factory_abi, IOU in VOTE_PROXY_FACTORIES.values():
 
-        vote_proxy_contract = chain.eth.contract(
-            address=Web3.toChecksumAddress(vote_proxy), abi=vote_proxy_abi
-        )
+        if has_proxy(
+            chain,
+            hot_address,
+            factory_address,
+            factory_abi,
+            block,
+        ):
 
-        # MKRs stored on linked cold wallet
-        cold = vote_proxy_contract.functions.cold().call(
-            block_identifier=poll_closing_block
-        )
-        if cold.lower() != voter.lower():
-            MKRs_1_1_COLD = balance_of(chain, MKR, cold, token_abi, poll_closing_block)
+            vote_proxy, vote_proxy_address = get_proxy(chain, hot_address, factory_address, factory_abi, block)
 
-    if has_proxy(
-        chain,
-        voter,
-        vote_proxy_factory_V2_address,
-        vote_proxy_factory_V2_abi,
-        poll_closing_block,
-    ):
+            # MKRs staked in DSChiefs via VoteProxy
+            PROXY_CHIEFs_balance += balance_of(
+                chain, IOU, vote_proxy, block
+            )
 
-        vote_proxy_factory_v2_contract = chain.eth.contract(
-            address=Web3.toChecksumAddress(vote_proxy_factory_V2_address),
-            abi=vote_proxy_factory_V2_abi,
-        )
-        vote_proxy = vote_proxy_factory_v2_contract.functions.hotMap(
-            Web3.toChecksumAddress(voter)
-        ).call(block_identifier=poll_closing_block)
-        # MKRs staked to DSChief 1.2 via VoteProxy
-        STAKED_VIA_PROXY_1_2 = balance_of(
-            chain, IOU_1_2_address, vote_proxy, token_abi, poll_closing_block
-        )
+            cold_address = vote_proxy.functions.cold().call(
+                block_identifier=block
+            )
 
-        vote_proxy_contract = chain.eth.contract(
-            address=Web3.toChecksumAddress(vote_proxy), abi=vote_proxy_abi
-        )
-
-        # MKRs stored on linked cold wallet
-        cold = vote_proxy_contract.functions.cold().call(
-            block_identifier=poll_closing_block
-        )
-        if cold.lower() != voter.lower():
-            MKRs_1_2_COLD = balance_of(chain, MKR, cold, token_abi, poll_closing_block)
+            # MKRs in the COLD wallet if it is different than the HOT wallet
+            if cold_address.lower() != hot_address.lower():
+                COLD_balance += balance_of(chain, MKR, cold_address, block)
 
     VOTING_POWER = (
-        VOTING_POWER
-        + MKRs_HOT
-        + IOU_1_0
-        + IOU_1_1
-        + IOU_1_2
-        + STAKED_VIA_PROXY_1_1
-        + MKRs_1_1_COLD
-        + STAKED_VIA_PROXY_1_2
-        + MKRs_1_2_COLD
+            VOTING_POWER
+            + HOT_balance
+            + CHIEFS_balance
+            + PROXY_CHIEFs_balance
+            + COLD_balance
     )
 
 print(
     {
         "VOTERS": len(voters),
-        "POLL CLOSING BLOCK": poll_closing_block,
+        "BLOCK": block,
         "VOTING POWER": VOTING_POWER,
     }
 )
