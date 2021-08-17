@@ -28,9 +28,11 @@ for hot_address in voters:
     DIRECT STAKES
     """
     # MKRs staked in DSChiefs by the HOT wallet
-    CHIEFS_balance = sum(
-        [balance_of(chain, IOU, hot_address, block) for IOU in IOUs.values()]
-    )
+    CHIEFS_balance = sum([
+        balance_of(
+            chain, IOU, hot_address, block
+        ) for IOU in IOUs.values()
+    ])
 
     """
     STAKES VIA VoteProxy and COLD STORAGE
