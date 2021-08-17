@@ -69,11 +69,18 @@ def get_proxy(chain, voter, factory_address, factory_abi, block=None):
             address=Web3.toChecksumAddress(vote_proxy_address), abi=VOTE_PROXY_ABI
         )
 
+        if block:
+            cold_address = vote_proxy.functions.cold().call(
+                block_identifier=block
+            )
+        else:
+            cold_address = vote_proxy.functions.cold().call()
+
     except Exception as e:
         print(e)
-        vote_proxy = vote_proxy_address = None
+        vote_proxy = vote_proxy_address = cold_address = None
 
-    return vote_proxy, vote_proxy_address
+    return vote_proxy, vote_proxy_address, cold_address
 
 
 def connect_chain(http_hook=None):

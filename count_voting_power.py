@@ -49,15 +49,13 @@ for hot_address in voters:
             block,
         ):
 
-            vote_proxy, vote_proxy_address = get_proxy(chain, hot_address, factory_address, factory_abi, block)
+            # if voter has a proxy get its parameters
+            vote_proxy, vote_proxy_address, cold_address = \
+                get_proxy(chain, hot_address, factory_address, factory_abi, block)
 
             # MKRs staked in DSChiefs via VoteProxy
             PROXY_CHIEFs_balance += balance_of(
                 chain, IOU, vote_proxy, block
-            )
-
-            cold_address = vote_proxy.functions.cold().call(
-                block_identifier=block
             )
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
