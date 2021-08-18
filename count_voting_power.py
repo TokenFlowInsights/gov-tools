@@ -15,7 +15,6 @@ chain = connect_chain(node)
 VOTING_POWER = 0
 
 for hot_address in voters:
-
     """
     HOT STORAGE
     """
@@ -61,8 +60,9 @@ for hot_address in voters:
             )
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
-            if cold_address.lower() != hot_address.lower():
-                COLD_balance += balance_of(chain, MKR, cold_address, block)
+            if cold_address:
+                if cold_address.lower() != hot_address.lower():
+                    COLD_balance += balance_of(chain, MKR, cold_address, block)
 
     VOTING_POWER = (
             VOTING_POWER
