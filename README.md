@@ -26,7 +26,7 @@
     There are more providers of node services, here's a list: https://ethereum.org/en/developers/docs/nodes-and-clients/nodes-as-a-service/
 
 
-4. Prepare a list of voters that you would like to count voting power for. One address in a row, no header, CSV file format. Put the .csv file in gov-tools directory
+4. Prepare a list of voters that you would like to count voting power for. One address by row, no header, CSV file format. Put the .csv file in gov-tools directory
 
 
 5. Prepare block number. This tool will count voting power of set of voters form passeed .csv file.
