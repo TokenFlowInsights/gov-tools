@@ -1,7 +1,7 @@
 from web3 import Web3
 import csv
 
-from resources import TOKEN_ABI, VOTE_PROXY_ABI, CHIEF_1_2_ABI, CHIEF_1_2
+from resources import TOKEN_ABI, VOTE_PROXY_ABI, CHIEFS
 
 
 def balance_of(chain, token, address, block=None):
@@ -112,20 +112,32 @@ def list_voters(file):
     return voters
 
 
-def get_delegated_power(chain, address):
+def get_chief_deposit(chain, chief, abi, address, block):
 
-    delegated_voting_power = 0
+    deposit = 0
 
-    chef_contract = chain.eth.contract(
-        address=Web3.toChecksumAddress(CHIEF_1_2),
-        abi=CHIEF_1_2_ABI,
+    chief_contract = chain.eth.contract(
+        address=Web3.toChecksumAddress(chief),
+        abi=abi,
     )
 
-    delegated_deposit = chef_contract.functions.deposits(
+    d = chief_contract.functions.deposits(
         Web3.toChecksumAddress(address)
-    ).call()
+    ).call(block_identifier=block)
 
-    if delegated_deposit > 0:
-        delegated_voting_power = delegated_deposit / 10 ** 18
+    if d > 0:
+        deposit = d / 10 ** 18
 
-    return delegated_voting_power
+    return deposit
+
+
+def get_staked(chain, address, block):
+
+    staked = 0
+
+    for CHIEF in CHIEFS:
+        staked = get_chief_deposit(chain, CHIEF['address'], CHIEF['abi'], address, block)
+        if staked > 0:
+            break
+    
+    return staked
