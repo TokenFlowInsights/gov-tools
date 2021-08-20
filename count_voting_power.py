@@ -24,18 +24,18 @@ for hot_address in voters:
     """
     DIRECT STAKES & DELEGATED VOTES
     """
-    CHIEFS_balance = get_staked(chain, hot_address, block)
+    CHIEF_deposit = get_deposit(chain, hot_address, block)
 
     """
-    STAKES VIA VoteProxy and COLD STORAGE
+    STAKES VIA VoteProxy & COLD STORAGE
     """
-    PROXY_CHIEFs_balance = 0
+    PROXY_deposit = 0
     COLD_balance = 0
 
     # iterate over Proxy Factories
     for VOTE_PROXY_FACTORY in VOTE_PROXY_FACTORIES:
 
-        _has_proxy =  has_proxy(
+        _has_proxy = has_proxy(
             chain,
             hot_address,
             VOTE_PROXY_FACTORY["address"],
@@ -54,24 +54,18 @@ for hot_address in voters:
             )
 
             # MKRs staked in DSChiefs via VoteProxy
-            PROXY_CHIEFs_balance += balance_of(
-                chain, VOTE_PROXY_FACTORY["iou"], vote_proxy_address, block
-            )
+            PROXY_deposit += get_deposit(chain, vote_proxy_address, block)
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
             if cold_address:
                 if cold_address.lower() != hot_address.lower():
                     COLD_balance += balance_of(chain, MKR, cold_address, block)
-            
+
             # if voter has latest version of VoteProxy don't add voting power from older one
             break
 
     VOTING_POWER = (
-        VOTING_POWER
-        + HOT_balance
-        + CHIEFS_balance
-        + PROXY_CHIEFs_balance
-        + COLD_balance
+        VOTING_POWER + HOT_balance + CHIEF_deposit + PROXY_deposit + COLD_balance
     )
 
 print(

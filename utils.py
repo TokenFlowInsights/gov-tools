@@ -121,9 +121,9 @@ def get_chief_deposit(chain, chief, abi, address, block):
         abi=abi,
     )
 
-    d = chief_contract.functions.deposits(
-        Web3.toChecksumAddress(address)
-    ).call(block_identifier=block)
+    d = chief_contract.functions.deposits(Web3.toChecksumAddress(address)).call(
+        block_identifier=block
+    )
 
     if d > 0:
         deposit = d / 10 ** 18
@@ -131,13 +131,15 @@ def get_chief_deposit(chain, chief, abi, address, block):
     return deposit
 
 
-def get_staked(chain, address, block):
+def get_deposit(chain, address, block):
 
-    staked = 0
+    deposit = 0
 
     for CHIEF in CHIEFS:
-        staked = get_chief_deposit(chain, CHIEF['address'], CHIEF['abi'], address, block)
-        if staked > 0:
+        deposit = get_chief_deposit(
+            chain, CHIEF["address"], CHIEF["abi"], address, block
+        )
+        if deposit > 0:
             break
-    
-    return staked
+
+    return deposit
