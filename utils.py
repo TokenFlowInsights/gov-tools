@@ -1,7 +1,7 @@
 from web3 import Web3
 import csv
 
-from resources import TOKEN_ABI, VOTE_PROXY_ABI
+from resources import TOKEN_ABI, VOTE_PROXY_ABI, CHIEFS
 
 
 def balance_of(chain, token, address, block=None):
@@ -70,9 +70,7 @@ def get_proxy(chain, voter, factory_address, factory_abi, block=None):
         )
 
         if block:
-            cold_address = vote_proxy.functions.cold().call(
-                block_identifier=block
-            )
+            cold_address = vote_proxy.functions.cold().call(block_identifier=block)
         else:
             cold_address = vote_proxy.functions.cold().call()
 
@@ -112,3 +110,36 @@ def list_voters(file):
             voters.append(row[0])
 
     return voters
+
+
+def get_chief_deposit(chain, chief, abi, address, block):
+
+    deposit = 0
+
+    chief_contract = chain.eth.contract(
+        address=Web3.toChecksumAddress(chief),
+        abi=abi,
+    )
+
+    d = chief_contract.functions.deposits(Web3.toChecksumAddress(address)).call(
+        block_identifier=block
+    )
+
+    if d > 0:
+        deposit = d / 10 ** 18
+
+    return deposit
+
+
+def get_deposit(chain, address, block):
+
+    deposit = 0
+
+    for CHIEF in CHIEFS:
+        deposit = get_chief_deposit(
+            chain, CHIEF["address"], CHIEF["abi"], address, block
+        )
+        if deposit > 0:
+            break
+
+    return deposit

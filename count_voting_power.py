@@ -1,6 +1,6 @@
 import sys
 
-from resources import MKR, IOUs, VOTE_PROXY_FACTORIES
+from resources import MKR, VOTE_PROXY_FACTORIES
 from utils import *
 
 # read in command line arguments
@@ -19,57 +19,53 @@ for hot_address in voters:
     HOT STORAGE
     """
     # MKRs in the HOT wallet
-    HOT_balance = balance_of(
-        chain, MKR, hot_address, block
-    )
+    HOT_balance = balance_of(chain, MKR, hot_address, block)
 
     """
-    DIRECT STAKES
+    DIRECT STAKES & DELEGATED VOTES
     """
-    # MKRs staked in DSChiefs by the HOT wallet
-    CHIEFS_balance = sum([
-        balance_of(
-            chain, IOU, hot_address, block
-        ) for IOU in IOUs.values()
-    ])
+    CHIEF_deposit = get_deposit(chain, hot_address, block)
 
     """
-    STAKES VIA VoteProxy and COLD STORAGE
+    STAKES VIA VoteProxy & COLD STORAGE
     """
-    PROXY_CHIEFs_balance = 0
+    PROXY_deposit = 0
     COLD_balance = 0
 
     # iterate over Proxy Factories
-    for VOTE_PROXY_FACTORY in VOTE_PROXY_FACTORIES.values():
-    
-        if has_proxy(
+    for VOTE_PROXY_FACTORY in VOTE_PROXY_FACTORIES:
+
+        _has_proxy = has_proxy(
             chain,
             hot_address,
-            VOTE_PROXY_FACTORY['address'],
-            VOTE_PROXY_FACTORY['abi'],
+            VOTE_PROXY_FACTORY["address"],
+            VOTE_PROXY_FACTORY["abi"],
             block,
-        ):
+        )
 
+        if _has_proxy:
             # if voter has a proxy get its parameters
-            vote_proxy, vote_proxy_address, cold_address = \
-                get_proxy(chain, hot_address, VOTE_PROXY_FACTORY['address'], VOTE_PROXY_FACTORY['abi'], block)
+            vote_proxy, vote_proxy_address, cold_address = get_proxy(
+                chain,
+                hot_address,
+                VOTE_PROXY_FACTORY["address"],
+                VOTE_PROXY_FACTORY["abi"],
+                block,
+            )
 
             # MKRs staked in DSChiefs via VoteProxy
-            PROXY_CHIEFs_balance += balance_of(
-                chain, VOTE_PROXY_FACTORY['iou'], vote_proxy_address, block
-            )
+            PROXY_deposit += get_deposit(chain, vote_proxy_address, block)
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
             if cold_address:
                 if cold_address.lower() != hot_address.lower():
                     COLD_balance += balance_of(chain, MKR, cold_address, block)
 
+            # if voter has latest version of VoteProxy don't add voting power from older one
+            break
+
     VOTING_POWER = (
-            VOTING_POWER
-            + HOT_balance
-            + CHIEFS_balance
-            + PROXY_CHIEFs_balance
-            + COLD_balance
+        VOTING_POWER + HOT_balance + CHIEF_deposit + PROXY_deposit + COLD_balance
     )
 
 print(
