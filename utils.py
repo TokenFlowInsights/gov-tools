@@ -21,7 +21,6 @@ def balance_of(chain, token, address, block=None):
         decimals = token_contract.functions.decimals().call()
         balance /= 10 ** decimals
     except Exception as e:
-        print(f"1: {e}")
         balance = 0
 
     return balance
@@ -42,7 +41,6 @@ def has_proxy(chain, address, factory_address, factory_abi, block=None):
                 Web3.toChecksumAddress(address)
             ).call()
     except Exception as e:
-        print(f"2: {e}")
         proxy = False
 
     return proxy
@@ -75,7 +73,6 @@ def get_proxy(chain, voter, factory_address, factory_abi, block=None):
             cold_address = vote_proxy.functions.cold().call()
 
     except Exception as e:
-        print(f"3: {e}")
         vote_proxy = vote_proxy_address = cold_address = None
 
     return vote_proxy, vote_proxy_address, cold_address

@@ -13,6 +13,10 @@ chain = connect_chain(node)
 
 # calculate the total voting power
 VOTING_POWER = 0
+TOTAL_HOT_BALANCE = 0
+TOTAL_CHIEF_DEPOSITS = 0
+TOTAL_PROXY_DEPOSITS = 0
+TOTAL_COLD_BALANCE = 0
 
 for hot_address in voters:
     """
@@ -54,7 +58,8 @@ for hot_address in voters:
             )
 
             # MKRs staked in DSChiefs via VoteProxy
-            PROXY_deposit += get_deposit(chain, vote_proxy_address, block)
+            if vote_proxy_address:
+                PROXY_deposit += get_deposit(chain, vote_proxy_address, block)
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
             if cold_address:
@@ -63,7 +68,7 @@ for hot_address in voters:
 
             # if voter has latest version of VoteProxy don't add voting power from older one
             break
-
+    
     VOTING_POWER = (
         VOTING_POWER + HOT_balance + CHIEF_deposit + PROXY_deposit + COLD_balance
     )
