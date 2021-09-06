@@ -35,6 +35,7 @@ for hot_address in voters:
     """
     PROXY_deposit = 0
     COLD_balance = 0
+    VOTE_PROXY_balance = 0
 
     # iterate over Proxy Factories
     for VOTE_PROXY_FACTORY in VOTE_PROXY_FACTORIES:
@@ -60,6 +61,7 @@ for hot_address in voters:
             # MKRs staked in DSChiefs via VoteProxy
             if vote_proxy_address:
                 PROXY_deposit += get_deposit(chain, vote_proxy_address, block)
+                VOTE_PROXY_balance += balance_of(chain, MKR, vote_proxy_address, block)
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
             if cold_address:
@@ -70,7 +72,7 @@ for hot_address in voters:
             break
     
     VOTING_POWER = (
-        VOTING_POWER + HOT_balance + CHIEF_deposit + PROXY_deposit + COLD_balance
+        VOTING_POWER + HOT_balance + CHIEF_deposit + PROXY_deposit + COLD_balance + VOTE_PROXY_balance
     )
 
 print(
