@@ -8,7 +8,11 @@ list_of_voters = sys.argv[1]
 node = sys.argv[2]
 block = int(sys.argv[3]) if sys.argv[3] else None
 
-voters = list_voters(list_of_voters)
+voters = list()
+for v in list_voters(list_of_voters):
+    if v not in voters:
+        voters.append(v)
+
 chain = connect_chain(node)
 
 # calculate the total voting power
