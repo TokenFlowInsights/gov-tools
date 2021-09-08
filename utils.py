@@ -133,10 +133,13 @@ def get_deposit(chain, address, block):
     deposit = 0
 
     for CHIEF in CHIEFS:
-        deposit = get_chief_deposit(
-            chain, CHIEF["address"], CHIEF["abi"], address, block
-        )
-        if deposit > 0:
-            break
+        try:
+            d = get_chief_deposit(
+                chain, CHIEF["address"], CHIEF["abi"], address, block
+            )
+        except:
+            d = 0
+            
+        deposit += d
 
     return deposit
