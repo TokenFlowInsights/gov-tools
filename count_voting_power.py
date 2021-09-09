@@ -65,13 +65,21 @@ for hot_address in voters:
                 block,
             )
 
-            vote_proxy_address = vote_proxy_address.lower() if vote_proxy_address else vote_proxy_address
+            vote_proxy_address = (
+                vote_proxy_address.lower() if vote_proxy_address else vote_proxy_address
+            )
             cold_address = cold_address.lower() if cold_address else cold_address
 
             # MKRs staked to DSChief via VoteProxy
             # & MKRs stored in VoteProxy contract
             if vote_proxy_address and vote_proxy_address not in ADDRESSES:
-                PROXY_deposit += get_chief_deposit(chain, VOTE_PROXY_FACTORY["chief_address"], VOTE_PROXY_FACTORY["chief_abi"], vote_proxy_address, block)
+                PROXY_deposit += get_chief_deposit(
+                    chain,
+                    VOTE_PROXY_FACTORY["chief_address"],
+                    VOTE_PROXY_FACTORY["chief_abi"],
+                    vote_proxy_address,
+                    block,
+                )
                 VOTE_PROXY_balance += balance_of(chain, MKR, vote_proxy_address, block)
                 ADDRESSES.append(vote_proxy_address)
 
@@ -79,9 +87,17 @@ for hot_address in voters:
             if cold_address and cold_address not in ADDRESSES:
                 COLD_balance += balance_of(chain, MKR, cold_address, block)
                 ADDRESSES.append(cold_address)
-    
+
+            break
+
     VOTING_POWER = (
-        VOTING_POWER + HOT_balance + CHIEFS_deposit + PROXY_deposit + VOTE_PROXY_balance + COLD_deposit + COLD_balance
+        VOTING_POWER
+        + HOT_balance
+        + CHIEFS_deposit
+        + PROXY_deposit
+        + VOTE_PROXY_balance
+        + COLD_deposit
+        + COLD_balance
     )
 
 print(
