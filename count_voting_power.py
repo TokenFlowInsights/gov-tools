@@ -17,12 +17,11 @@ chain = connect_chain(node)
 
 # calculate the total voting power
 VOTING_POWER = 0
-TOTAL_HOT_BALANCE = 0
-TOTAL_CHIEF_DEPOSITS = 0
-TOTAL_PROXY_DEPOSITS = 0
-TOTAL_COLD_BALANCE = 0
+
 
 for hot_address in voters:
+
+    hot_address = hot_address.lower()
     """
     HOT STORAGE
     """
@@ -58,13 +57,16 @@ for hot_address in voters:
 
         if _has_proxy:
             # if voter has VoteProxy get its parameters
-            vote_proxy, vote_proxy_address, cold_address = get_proxy(
+            vote_proxy_address, cold_address = get_proxy(
                 chain,
                 hot_address,
                 VOTE_PROXY_FACTORY["address"],
                 VOTE_PROXY_FACTORY["abi"],
                 block,
             )
+
+            vote_proxy_address = vote_proxy_address.lower() if vote_proxy_address else vote_proxy_address
+            cold_address = cold_address.lower() if cold_address else cold_address
 
             # MKRs staked to DSChief via VoteProxy
             # & MKRs stored in VoteProxy contract
@@ -74,10 +76,9 @@ for hot_address in voters:
                 ADDRESSES.append(vote_proxy_address)
 
             # MKRs in the COLD wallet if it is different than the HOT wallet
-            if cold_address:
-                COLD_deposit += get_chief_deposit(chain, VOTE_PROXY_FACTORY["chief_address"], VOTE_PROXY_FACTORY["chief_abi"], cold_address, block)
-                if cold_address not in ADDRESSES:
-                    COLD_balance += balance_of(chain, MKR, cold_address, block)
+            if cold_address and cold_address not in ADDRESSES:
+                COLD_balance += balance_of(chain, MKR, cold_address, block)
+                ADDRESSES.append(cold_address)
     
     VOTING_POWER = (
         VOTING_POWER + HOT_balance + CHIEFS_deposit + PROXY_deposit + VOTE_PROXY_balance + COLD_deposit + COLD_balance

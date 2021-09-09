@@ -73,9 +73,9 @@ def get_proxy(chain, voter, factory_address, factory_abi, block=None):
             cold_address = vote_proxy.functions.cold().call()
 
     except Exception as e:
-        vote_proxy = vote_proxy_address = cold_address = None
+        vote_proxy_address = cold_address = None
 
-    return vote_proxy, vote_proxy_address, cold_address
+    return vote_proxy_address, cold_address
 
 
 def connect_chain(http_hook=None):
